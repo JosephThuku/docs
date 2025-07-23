@@ -1,0 +1,50 @@
+---
+title: Rates
+---
+
+# 💱 Fetch Token to KES Rates
+
+**GET** `/rates`
+
+Get the latest conversion rate from supported tokens (USDC, ETH, etc.) to KES.
+
+## 🔐 Authentication
+All requests require an `x-api-key` header.
+
+---
+
+## 📝 Query Parameters
+| Param     | Required | Description                                                      |
+|-----------|----------|------------------------------------------------------------------|
+| currency  | No       | One of `usdc`, `eth`, `wxm`, `usdt_lisk` (default: `usdc`)       |
+
+---
+
+## 📝 Example Request
+```http
+GET /rates?currency=usdc
+x-api-key: YOUR_API_KEY_HERE
+```
+
+---
+
+## ✅ Example Response
+```json
+{
+  "currency": "usdc",
+  "base_rate": 144.97,
+  "marked_up_rate": 148.59,
+  "markup_percentage": 2.5
+}
+```
+
+---
+
+## 🧠 Why This Matters
+When using the **offramp flow**, you must first call `approve()` for the token. Use this `/rates` route to calculate the amount of tokens (e.g. USDC) to approve:
+
+```
+approve_amount = amount_fiat / marked_up_rate
+```
+
+This ensures the user has approved **enough tokens** before calling `/orders/create` with `order_type: 1`. 

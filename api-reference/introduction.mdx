@@ -1,33 +1,22 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API Reference
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+# 📤 Element Pay API Reference
 
-## Welcome
+Welcome to the Element Pay API reference. Here you'll find details for all endpoints, authentication, and integration best practices.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+- **Base URL:** `https://staging.elementpay.net/api/v1`
+- **Authentication:** All endpoints require an `x-api-key` header.
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+> For questions, email: [elementpay.info@gmail.com](mailto:elementpay.info@gmail.com)
 
-## Authentication
+## Endpoints
+- [Create Order (Onramp/Offramp)](endpoint/create)
+- [Check Order Status](endpoint/get)
+- [Rates](endpoint/rates)
+- [Webhooks](endpoint/webhook)
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+---
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+> **Tip:** Start with [Quickstart](../../quickstart) for a hands-on guide. 

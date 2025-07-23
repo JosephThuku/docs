@@ -1,4 +1,120 @@
 ---
-title: 'Create Plant'
-openapi: 'POST /plants'
+title: Create Order (Onramp & Offramp)
 ---
+
+# 📝 Create Order
+
+**POST** `/orders/create`
+
+Create an onramp (fiat → crypto) or offramp (crypto → fiat) order.
+
+## 🔐 Authentication
+All requests require an `x-api-key` header.
+
+---
+
+## 🔁 Order Types
+| `order_type` | Description |
+|--------------|-------------|
+| `0`          | Onramp      |
+| `1`          | Offramp     |
+
+---
+
+## ✅ Supported Tokens
+| Network   | Token |
+|-----------|-------|
+| Lisk      | USDT  |
+| Arbitrum  | WXM   |
+| Scroll    | USDC  |
+| Base      | USDC  |
+| Ethereum  | ETH   |
+
+---
+
+## 💸 Offramp Flow (order_type: 1)
+
+1. **Approve the Token** (ERC-20):
+   ```js
+   const contract = new ethers.Contract(tokenAddress, erc20ABI, signer);
+   await contract.approve("0xELEMENT_CONTRACT", "6900000"); // e.g. 6.9 USDC (6 decimals)
+   ```
+2. **Create the Offramp Order:**
+   ```json
+   POST /orders/create
+   Headers:
+     x-api-key: YOUR_API_KEY_HERE
+     Content-Type: application/json
+   {
+     "user_address": "0xabc123...",
+     "token": "0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4",
+     "order_type": 1,
+     "fiat_payload": {
+       "amount_fiat": 1000,
+       "phone_number": "254712345678",
+       "cashout_type": "PHONE"
+     }
+   }
+   ```
+   > Transfers tokens from the user's wallet, converts to KES, and pays out to the MPESA number.
+
+---
+
+## 📩 Onramp Flow (order_type: 0)
+
+```json
+POST /orders/create
+Headers:
+  x-api-key: YOUR_API_KEY_HERE
+  Content-Type: application/json
+{
+  "user_address": "0x40C2f2e0326bD1f647fbeB8732529e08B4DB309f",
+  "token": "0x05D032ac25d322df992303dCa074EE7392C117b9",
+  "order_type": 0,
+  "webhook_url": "https://yourdomain.com/webhook",
+  "fiat_payload": {
+    "amount_fiat": 10,
+    "cashout_type": "PHONE",
+    "phone_number": "254712531490"
+  }
+}
+```
+> Accepts MPESA payment, sends crypto to `user_address`, and notifies the webhook.
+
+---
+
+## 📝 Request Body
+
+### Root Fields
+| Field          | Type   | Required | Description                                  |
+|----------------|--------|----------|----------------------------------------------|
+| `user_address` | string | Yes      | User's wallet address                        |
+| `token`        | string | Yes      | Address of token to receive/send             |
+| `order_type`   | int    | Yes      | `0` for Onramp, `1` for Offramp              |
+| `webhook_url`  | string | No*      | Required for Onramp                          |
+| `fiat_payload` | object | Yes      | Fiat payment details (see below)             |
+
+### `fiat_payload` Schema
+| Field            | Type   | Required | Description                                     |
+|------------------|--------|----------|-------------------------------------------------|
+| `amount_fiat`    | float  | Yes      | Amount in KES                                   |
+| `cashout_type`   | string | Yes      | Must be "PHONE"                                 |
+| `phone_number`   | string | Yes      | M-PESA number in format `2547XXXXXXXX`          |
+| `currency`       | string | No       | Defaults to "KES"                               |
+| `till_number`    | string | No       | Only for `cashout_type = TILL`                  |
+| `paybill_number` | string | No       | For `cashout_type = PAYBILL`                    |
+| `account_number` | string | No       | For `cashout_type = PAYBILL`                    |
+| `reference`      | string | No       | Optional payment reference                      |
+
+---
+
+## ✅ Example Response
+```json
+{
+  "tx_hash": "0xabc123...",
+  "status": "submitted",
+  "rate_used": 144.32,
+  "amount_sent": 6.93,
+  "fiat_paid": 1000
+}
+``` 
