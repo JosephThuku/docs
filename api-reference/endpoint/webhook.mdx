@@ -1,0 +1,394 @@
+---
+title: Webhooks
+description: Receive real-time order status updates via webhooks
+---
+
+# Webhooks
+
+Receive real-time notifications when order statuses change. Webhooks are essential for onramp orders and recommended for all transactions.
+
+<Info>
+**Required for:** Onramp orders (order_type: 0)
+
+**Optional for:** Offramp orders (order_type: 1)
+</Info>
+
+## How Webhooks Work
+
+<Steps>
+  <Step title="Configure Webhook URL">
+    Provide a webhook URL when creating an order
+  </Step>
+  <Step title="Receive Notifications">
+    Element Pay sends HTTP POST requests to your endpoint
+  </Step>
+  <Step title="Acknowledge Receipt">
+    Respond with HTTP 200 to confirm receipt
+  </Step>
+  <Step title="Handle Retries">
+    Failed webhooks are retried with exponential backoff
+  </Step>
+</Steps>
+
+## Webhook Payload
+
+Element Pay sends a POST request to your webhook URL with the following payload:
+
+<ResponseExample>
+```json Webhook Payload
+{
+  "event": "order.status_changed",
+  "timestamp": "2024-01-15T10:45:00Z",
+  "data": {
+    "order_id": "ord_1234567890abcdef",
+    "transaction_hash": "0xabc123def456789...",
+    "status": "COMPLETED",
+    "previous_status": "PROCESSING",
+    "order_type": "onramp",
+    "amount_fiat": 1000,
+    "amount_crypto": 6.93,
+    "currency": "KES",
+    "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "token_symbol": "USDC",
+    "network": "base",
+    "wallet_address": "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
+    "phone_number": "254712345678",
+    "exchange_rate": 144.32,
+    "fees": {
+      "platform_fee": 10,
+      "network_fee": 2.5,
+      "total_fees": 12.5
+    },
+    "payment_details": {
+      "method": "mpesa",
+      "receipt_number": "QHX8K9L2M3",
+      "confirmation_code": "ws_CO_123456789"
+    },
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:45:00Z",
+    "completed_at": "2024-01-15T10:45:00Z"
+  },
+  "signature": "sha256=a8b9c0d1e2f3..."
+}
+```
+</ResponseExample>
+
+## Webhook Events
+
+<AccordionGroup>
+  <Accordion title="order.status_changed">
+    Triggered when an order status changes (PENDING → PROCESSING → COMPLETED)
+  </Accordion>
+  
+  <Accordion title="order.payment_received">
+    Triggered when payment is confirmed (onramp orders)
+  </Accordion>
+  
+  <Accordion title="order.crypto_sent">
+    Triggered when cryptocurrency is successfully sent (onramp orders)
+  </Accordion>
+  
+  <Accordion title="order.failed">
+    Triggered when an order fails
+  </Accordion>
+  
+  <Accordion title="order.expired">
+    Triggered when an order expires without completion
+  </Accordion>
+</AccordionGroup>
+
+## Implementation Examples
+
+<CodeGroup>
+```javascript Node.js/Express
+const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+// Webhook endpoint
+app.post('/webhooks/elementpay', (req, res) => {
+  const signature = req.headers['x-elementpay-signature'];
+  const payload = JSON.stringify(req.body);
+  
+  // Verify webhook signature
+  if (!verifySignature(payload, signature)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  const { event, data } = req.body;
+  
+  switch (event) {
+    case 'order.status_changed':
+      handleStatusChange(data);
+      break;
+    case 'order.payment_received':
+      handlePaymentReceived(data);
+      break;
+    case 'order.crypto_sent':
+      handleCryptoSent(data);
+      break;
+    case 'order.failed':
+      handleOrderFailed(data);
+      break;
+    default:
+      console.log(`Unknown event: ${event}`);
+  }
+  
+  res.status(200).send('OK');
+});
+
+function verifySignature(payload, signature) {
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.ELEMENTPAY_WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+  
+  return signature === `sha256=${expectedSignature}`;
+}
+
+function handleStatusChange(data) {
+  console.log(`Order ${data.order_id} status: ${data.status}`);
+  
+  // Update your database
+  // Send notifications to users
+  // Trigger business logic
+}
+
+app.listen(3000, () => {
+  console.log('Webhook server running on port 3000');
+});
+```
+
+```python Python/Flask
+from flask import Flask, request, jsonify
+import hashlib
+import hmac
+import os
+
+app = Flask(__name__)
+
+@app.route('/webhooks/elementpay', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-Elementpay-Signature')
+    payload = request.get_data()
+    
+    # Verify webhook signature
+    if not verify_signature(payload, signature):
+        return jsonify({'error': 'Invalid signature'}), 401
+    
+    data = request.json
+    event = data.get('event')
+    order_data = data.get('data')
+    
+    if event == 'order.status_changed':
+        handle_status_change(order_data)
+    elif event == 'order.payment_received':
+        handle_payment_received(order_data)
+    elif event == 'order.crypto_sent':
+        handle_crypto_sent(order_data)
+    elif event == 'order.failed':
+        handle_order_failed(order_data)
+    else:
+        print(f"Unknown event: {event}")
+    
+    return jsonify({'status': 'success'}), 200
+
+def verify_signature(payload, signature):
+    expected_signature = hmac.new(
+        os.environ['ELEMENTPAY_WEBHOOK_SECRET'].encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    
+    return signature == f"sha256={expected_signature}"
+
+def handle_status_change(data):
+    print(f"Order {data['order_id']} status: {data['status']}")
+    
+    # Update your database
+    # Send notifications to users
+    # Trigger business logic
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
+```
+
+```php PHP
+<?php
+function handleWebhook() {
+    $signature = $_SERVER['HTTP_X_ELEMENTPAY_SIGNATURE'] ?? '';
+    $payload = file_get_contents('php://input');
+    
+    // Verify webhook signature
+    if (!verifySignature($payload, $signature)) {
+        http_response_code(401);
+        echo 'Invalid signature';
+        return;
+    }
+    
+    $data = json_decode($payload, true);
+    $event = $data['event'];
+    $orderData = $data['data'];
+    
+    switch ($event) {
+        case 'order.status_changed':
+            handleStatusChange($orderData);
+            break;
+        case 'order.payment_received':
+            handlePaymentReceived($orderData);
+            break;
+        case 'order.crypto_sent':
+            handleCryptoSent($orderData);
+            break;
+        case 'order.failed':
+            handleOrderFailed($orderData);
+            break;
+        default:
+            error_log("Unknown event: $event");
+    }
+    
+    http_response_code(200);
+    echo 'OK';
+}
+
+function verifySignature($payload, $signature) {
+    $expectedSignature = 'sha256=' . hash_hmac(
+        'sha256',
+        $payload,
+        $_ENV['ELEMENTPAY_WEBHOOK_SECRET']
+    );
+    
+    return hash_equals($signature, $expectedSignature);
+}
+
+function handleStatusChange($data) {
+    error_log("Order {$data['order_id']} status: {$data['status']}");
+    
+    // Update your database
+    // Send notifications to users
+    // Trigger business logic
+}
+
+handleWebhook();
+?>
+```
+</CodeGroup>
+
+## Security Best Practices
+
+<Warning>
+**Always verify webhook signatures** to ensure requests are from Element Pay.
+
+**Use HTTPS endpoints** to protect webhook data in transit.
+
+**Implement idempotency** to handle duplicate webhook deliveries.
+</Warning>
+
+### Signature Verification
+
+Every webhook includes a signature in the `X-Elementpay-Signature` header:
+
+```
+X-Elementpay-Signature: sha256=a8b9c0d1e2f3...
+```
+
+Verify this signature using your webhook secret:
+
+```javascript
+function verifySignature(payload, signature) {
+  const expectedSignature = crypto
+    .createHmac('sha256', WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+  
+  return signature === `sha256=${expectedSignature}`;
+}
+```
+
+## Retry Logic
+
+<Info>
+Element Pay retries failed webhooks with exponential backoff:
+
+- **Immediate retry** if no response
+- **1 minute** after first failure
+- **5 minutes** after second failure
+- **15 minutes** after third failure
+- **1 hour** after fourth failure
+- **6 hours** after fifth failure
+</Info>
+
+## Testing Webhooks
+
+### Local Development
+
+Use tools like ngrok to expose your local server:
+
+```bash
+# Install ngrok
+npm install -g ngrok
+
+# Expose local port 3000
+ngrok http 3000
+
+# Use the HTTPS URL for your webhook
+# https://abc123.ngrok.io/webhooks/elementpay
+```
+
+### Webhook Testing Tool
+
+```javascript
+// Simple webhook tester
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/test-webhook', (req, res) => {
+  console.log('Received webhook:');
+  console.log(JSON.stringify(req.body, null, 2));
+  console.log('Headers:', req.headers);
+  
+  res.status(200).send('OK');
+});
+
+app.listen(3000, () => {
+  console.log('Webhook tester running on http://localhost:3000/test-webhook');
+});
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Webhook not received">
+    - Check if your endpoint is publicly accessible
+    - Verify HTTPS is enabled
+    - Check firewall settings
+    - Ensure your server responds with HTTP 200
+  </Accordion>
+  
+  <Accordion title="Signature verification fails">
+    - Verify you're using the correct webhook secret
+    - Ensure you're hashing the raw request body
+    - Check the signature header name (`X-Elementpay-Signature`)
+  </Accordion>
+  
+  <Accordion title="Duplicate webhooks">
+    - Implement idempotency using order_id + timestamp
+    - Store processed webhook IDs to prevent duplicates
+    - Always respond with HTTP 200 even for duplicates
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Order" icon="plus" href="create">
+    Include webhook URL in orders
+  </Card>
+  <Card title="Track Orders" icon="magnifying-glass" href="get">
+    Monitor order status
+  </Card>
+</CardGroup>

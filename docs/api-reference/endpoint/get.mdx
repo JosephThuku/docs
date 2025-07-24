@@ -1,0 +1,96 @@
+---
+title: Check Order Status
+---
+
+# 📱 Check Order Status
+
+**GET** `/orders/tx/{tx_hash}`
+
+Retrieve the full metadata and status of an order using its transaction hash.
+
+## 🔐 Authentication
+All requests require an `x-api-key` header.
+
+---
+
+## 📝 Path Parameter
+| Param     | Description                               |
+|-----------|-------------------------------------------|
+| `tx_hash` | The transaction hash from `createOrder()` |
+
+---
+
+## 📝 Example Request
+
+### cURL
+
+```bash
+curl -X GET "https://api.yourdomain.com/v1/orders/tx/0xabc123..." \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+### Python (requests)
+
+```python
+import requests
+
+url = "https://api.yourdomain.com/v1/orders/tx/0xabc123..."
+headers = {"x-api-key": "YOUR_API_KEY_HERE"}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+### JavaScript (fetch)
+
+```javascript
+fetch("https://api.yourdomain.com/v1/orders/tx/0xabc123...", {
+  method: "GET",
+  headers: {
+    "x-api-key": "YOUR_API_KEY_HERE"
+  }
+})
+  .then(res => res.json())
+  .then(console.log);
+```
+
+---
+
+## ✅ Example Response
+
+```json
+{
+  "status": "success",
+  "message": "Order fetched successfully",
+  "data": {
+    "order_id": "12345abcde...",
+    "status": "PENDING",
+    "order_type": "onramp",
+    "amount_fiat": 1000,
+    "currency": "KES",
+    "token": "USDC",
+    "wallet_address": "0xabc...",
+    "phone_number": "254712345678",
+    "receipt_number": "ws_CO_...",
+    "transaction_hashes": {
+      "creation": "0xabc123...",
+      "settlement": null,
+      "refund": null
+    },
+    "created_at": "2025-06-16 17:26:03"
+  }
+}
+```
+
+---
+
+## 📘 Possible `status` values
+| Status              | Meaning                                                                 |
+|---------------------|-------------------------------------------------------------------------|
+| `PENDING`           | Awaiting settlement (e.g. user has not completed payment or approval)   |
+| `SETTLED`           | Successfully processed and funds released                               |
+| `FAILED`            | Order failed (e.g. user cancelled STK push or allowance was insufficient)|
+| `SETTLED_UNVERIFIED`| Blockchain confirms payment but off-chain verification failed            |
+
+---
+
+> Use this endpoint to build order tracking, payment feedback, or trigger webhook retries if needed. 

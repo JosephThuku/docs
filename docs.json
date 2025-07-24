@@ -33,12 +33,18 @@
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Core Endpoints",
             "pages": [
-              "api-reference/endpoint/get",
               "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
+              "api-reference/endpoint/get",
+              "api-reference/endpoint/rates",
               "api-reference/endpoint/webhook"
+            ]
+          },
+          {
+            "group": "Testing & Integration",
+            "pages": [
+              "api-reference/playground"
             ]
           }
         ]

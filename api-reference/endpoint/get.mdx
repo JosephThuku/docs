@@ -1,59 +1,107 @@
 ---
 title: Check Order Status
+description: Retrieve order details and track transaction progress
+openapi: "GET /orders/tx/{tx_hash}"
 ---
 
-# 📱 Check Order Status
+# Check Order Status
 
-**GET** `/orders/tx/{tx_hash}`
+Retrieve the complete details and current status of an order using its transaction hash.
 
-Retrieve the full metadata and status of an order using its transaction hash.
+<Info>
+**Endpoint:** `GET /orders/tx/{tx_hash}`
 
-## 🔐 Authentication
-All requests require an `x-api-key` header.
+**Authentication:** Required (`x-api-key` header)
+</Info>
 
----
+## Quick Examples
 
-## 📝 Path Parameter
-| Param     | Description                               |
-|-----------|-------------------------------------------|
-| `tx_hash` | The transaction hash from `createOrder()` |
-
----
-
-## 📝 Example Request
-```http
-GET /orders/tx/0xabc123...
-x-api-key: YOUR_API_KEY_HERE
+<CodeGroup>
+```bash cURL
+curl -X GET "https://staging.elementpay.net/api/v1/orders/tx/0xabc123def456789..." \
+  -H "x-api-key: YOUR_API_KEY"
 ```
 
----
+```javascript JavaScript
+const response = await fetch(
+  'https://staging.elementpay.net/api/v1/orders/tx/0xabc123def456789...',
+  {
+    method: 'GET',
+    headers: {
+      'x-api-key': 'YOUR_API_KEY'
+    }
+  }
+);
 
-## ✅ Example Response
-```json
+const orderData = await response.json();
+console.log(orderData);
+```
+
+```python Python
+import requests
+
+url = "https://staging.elementpay.net/api/v1/orders/tx/0xabc123def456789..."
+headers = {
+    "x-api-key": "YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+order_data = response.json()
+print(order_data)
+```
+</CodeGroup>
+
+## Path Parameters
+
+<ParamField path="tx_hash" type="string" required>
+  The transaction hash returned when creating the order
+</ParamField>
+
+## Response Format
+
+<ResponseExample>
+```json Success Response
 {
   "status": "success",
   "message": "Order fetched successfully",
   "data": {
-    "order_id": "12345abcde...",
-    "status": "PENDING",
+    "order_id": "ord_1234567890abcdef",
+    "status": "COMPLETED",
     "order_type": "onramp",
     "amount_fiat": 1000,
+    "amount_crypto": 6.93,
     "currency": "KES",
-    "token": "USDC",
-    "wallet_address": "0xabc...",
+    "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "token_symbol": "USDC",
+    "network": "base",
+    "wallet_address": "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
     "phone_number": "254712345678",
-    "receipt_number": "ws_CO_...",
+    "exchange_rate": 144.32,
+    "fees": {
+      "platform_fee": 10,
+      "network_fee": 2.5,
+      "total_fees": 12.5
+    },
+    "payment_details": {
+      "method": "mpesa",
+      "receipt_number": "QHX8K9L2M3",
+      "confirmation_code": "ws_CO_123456789"
+    },
     "transaction_hashes": {
-      "creation": "0xabc123...",
-      "settlement": null,
+      "creation": "0xabc123def456789...",
+      "settlement": "0xdef456ghi789abc...",
       "refund": null
     },
-    "created_at": "2025-06-16 17:26:03"
+    "timestamps": {
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:45:00Z",
+      "completed_at": "2024-01-15T10:45:00Z",
+      "expires_at": "2024-01-15T11:30:00Z"
+    }
   }
 }
 ```
-
----
+</ResponseExample>
 
 ## 📘 Possible `status` values
 | Status              | Meaning                                                                 |

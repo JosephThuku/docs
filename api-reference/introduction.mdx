@@ -1,22 +1,120 @@
 ---
 title: API Reference
+description: Complete API reference for Element Pay - the leading crypto payment infrastructure
 ---
 
-# 📤 Element Pay API Reference
+# Element Pay API Reference
 
-Welcome to the Element Pay API reference. Here you'll find details for all endpoints, authentication, and integration best practices.
+Welcome to the Element Pay API documentation. Our REST API enables seamless crypto-to-fiat and fiat-to-crypto transactions across multiple blockchain networks.
 
-- **Base URL:** `https://staging.elementpay.net/api/v1`
-- **Authentication:** All endpoints require an `x-api-key` header.
+<Info>
+**Base URL:** `https://staging.elementpay.net/api/v1`
 
-> For questions, email: [elementpay.info@gmail.com](mailto:elementpay.info@gmail.com)
+**Authentication:** All endpoints require an `x-api-key` header
+</Info>
 
-## Endpoints
-- [Create Order (Onramp/Offramp)](endpoint/create)
-- [Check Order Status](endpoint/get)
-- [Rates](endpoint/rates)
-- [Webhooks](endpoint/webhook)
+## Quick Start
 
----
+<CardGroup cols={2}>
+  <Card title="Create Your First Order" icon="plus" href="endpoint/create">
+    Start with onramp or offramp transactions
+  </Card>
+  <Card title="Check Order Status" icon="magnifying-glass" href="endpoint/get">
+    Monitor transaction progress in real-time
+  </Card>
+  <Card title="Get Exchange Rates" icon="chart-line" href="endpoint/rates">
+    Fetch current conversion rates
+  </Card>
+  <Card title="Webhook Integration" icon="webhook" href="endpoint/webhook">
+    Receive real-time order updates
+  </Card>
+</CardGroup>
 
-> **Tip:** Start with [Quickstart](../../quickstart) for a hands-on guide. 
+## Authentication
+
+All API requests require authentication using an API key in the request header:
+
+```bash
+curl -H "x-api-key: YOUR_API_KEY_HERE" \
+  https://staging.elementpay.net/api/v1/orders
+```
+
+<Warning>
+Keep your API key secure and never expose it in client-side code. Store it as an environment variable.
+</Warning>
+
+## Supported Networks & Tokens
+
+<AccordionGroup>
+  <Accordion title="Supported Blockchain Networks">
+    - **Lisk** - USDT
+    - **Arbitrum** - WXM, USDC
+    - **Scroll** - USDC
+    - **Base** - USDC
+    - **Ethereum** - ETH, USDC
+    - **BNB Smart Chain** - USDT, USDC
+    - **Polygon** - USDT, USDC
+    - **Celo** - CUSD, CNGN
+    - **Tron** - USDT
+  </Accordion>
+  
+  <Accordion title="Supported Fiat Currencies">
+    - **KES** - Kenyan Shilling
+    - **UGX** - Ugandan Shilling
+    - **TZS** - Tanzanian Shilling
+    - **NGN** - Nigerian Naira
+    - **GHS** - Ghanaian Cedi
+  </Accordion>
+</AccordionGroup>
+
+## Order Types
+
+<CardGroup cols={2}>
+  <Card title="Onramp (Fiat → Crypto)" icon="arrow-right">
+    Convert fiat currency to cryptocurrency. Users pay via mobile money and receive crypto in their wallet.
+  </Card>
+  <Card title="Offramp (Crypto → Fiat)" icon="arrow-left">
+    Convert cryptocurrency to fiat currency. Users send crypto and receive fiat via mobile money.
+  </Card>
+</CardGroup>
+
+## Rate Limiting
+
+<Info>
+API requests are rate limited to **100 requests per minute** per API key. Exceed this limit and you'll receive a `429 Too Many Requests` response.
+</Info>
+
+## Error Handling
+
+The API uses conventional HTTP response codes:
+
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (invalid API key)
+- `404` - Not Found
+- `429` - Too Many Requests
+- `500` - Internal Server Error
+
+All error responses include a descriptive message:
+
+```json
+{
+  "status": "error",
+  "message": "Invalid API key provided",
+  "code": "INVALID_API_KEY"
+}
+```
+
+## Need Help?
+
+<CardGroup cols={3}>
+  <Card title="Email Support" icon="envelope" href="mailto:elementpay.info@gmail.com">
+    Get technical support
+  </Card>
+  <Card title="WhatsApp Community" icon="message" href="https://chat.whatsapp.com/JnE9EYgw9uM0XlhaGaBto3">
+    Join our developer community
+  </Card>
+  <Card title="Quickstart Guide" icon="rocket" href="../../quickstart">
+    Get started in minutes
+  </Card>
+</CardGroup>

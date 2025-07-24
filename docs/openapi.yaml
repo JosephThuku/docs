@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: BillionDollarStartup API
+  version: 1.0.0
+  description: API documentation for order status and related endpoints.
+servers:
+  - url: https://api.yourdomain.com/v1
+paths:
+  /orders/tx/{tx_hash}:
+    get:
+      summary: Check Order Status
+      description: Retrieve the full metadata and status of an order using its transaction hash.
+      parameters:
+        - name: tx_hash
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The transaction hash from `createOrder()`
+      responses:
+        '200':
+          description: Order status and metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      order_id:
+                        type: string
+                      status:
+                        type: string
+                        enum: [PENDING, SETTLED, FAILED, SETTLED_UNVERIFIED]
+                      order_type:
+                        type: string
+                      amount_fiat:
+                        type: number
+                      currency:
+                        type: string
+                      token:
+                        type: string
+                      wallet_address:
+                        type: string
+                      phone_number:
+                        type: string
+                      receipt_number:
+                        type: string
+                      transaction_hashes:
+                        type: object
+                        properties:
+                          creation:
+                            type: string
+                          settlement:
+                            type: string
+                            nullable: true
+                          refund:
+                            type: string
+                            nullable: true
+                      created_at:
+                        type: string
+                        format: date-time
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Server error
+      security:
+        - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key 

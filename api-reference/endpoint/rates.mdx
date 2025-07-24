@@ -1,50 +1,205 @@
 ---
-title: Rates
+title: Exchange Rates
+description: Get real-time conversion rates for supported tokens
+openapi: "GET /rates"
 ---
 
-# 💱 Fetch Token to KES Rates
+# Exchange Rates
 
-**GET** `/rates`
+Get real-time conversion rates between supported cryptocurrencies and fiat currencies.
 
-Get the latest conversion rate from supported tokens (USDC, ETH, etc.) to KES.
+<Info>
+**Endpoint:** `GET /rates`
 
-## 🔐 Authentication
-All requests require an `x-api-key` header.
+**Authentication:** Required (`x-api-key` header)
+</Info>
 
----
+## Quick Examples
 
-## 📝 Query Parameters
-| Param     | Required | Description                                                      |
-|-----------|----------|------------------------------------------------------------------|
-| currency  | No       | One of `usdc`, `eth`, `wxm`, `usdt_lisk` (default: `usdc`)       |
-
----
-
-## 📝 Example Request
-```http
-GET /rates?currency=usdc
-x-api-key: YOUR_API_KEY_HERE
+<CodeGroup>
+```bash cURL
+curl -X GET "https://staging.elementpay.net/api/v1/rates?currency=usdc" \
+  -H "x-api-key: YOUR_API_KEY"
 ```
 
----
+```javascript JavaScript
+const response = await fetch(
+  'https://staging.elementpay.net/api/v1/rates?currency=usdc',
+  {
+    method: 'GET',
+    headers: {
+      'x-api-key': 'YOUR_API_KEY'
+    }
+  }
+);
 
-## ✅ Example Response
-```json
+const rates = await response.json();
+console.log(rates);
+```
+
+```python Python
+import requests
+
+url = "https://staging.elementpay.net/api/v1/rates"
+params = {"currency": "usdc"}
+headers = {"x-api-key": "YOUR_API_KEY"}
+
+response = requests.get(url, params=params, headers=headers)
+rates = response.json()
+print(rates)
+```
+</CodeGroup>
+
+## Query Parameters
+
+<ParamField query="currency" type="string" default="usdc">
+  Token symbol to get rates for. Supported: `usdc`, `eth`, `wxm`, `usdt_lisk`
+</ParamField>
+
+<ParamField query="fiat" type="string" default="kes">
+  Fiat currency code. Supported: `kes`, `ugx`, `tzs`, `ngn`, `ghs`
+</ParamField>
+
+<ParamField query="amount" type="number">
+  Optional amount to calculate conversion for (returns converted amount)
+</ParamField>
+
+## Response Format
+
+<ResponseExample>
+```json Success Response
 {
   "currency": "usdc",
+  "fiat": "kes",
   "base_rate": 144.97,
   "marked_up_rate": 148.59,
-  "markup_percentage": 2.5
+  "markup_percentage": 2.5,
+  "last_updated": "2024-01-15T10:30:00Z",
+  "expires_at": "2024-01-15T10:35:00Z"
 }
 ```
+</ResponseExample>
 
----
+## Response Fields
 
-## 🧠 Why This Matters
-When using the **offramp flow**, you must first call `approve()` for the token. Use this `/rates` route to calculate the amount of tokens (e.g. USDC) to approve:
+<ResponseField name="base_rate" type="number">
+  Raw market rate without markup
+</ResponseField>
 
+<ResponseField name="marked_up_rate" type="number">
+  Final rate including platform markup (use this for calculations)
+</ResponseField>
+
+<ResponseField name="markup_percentage" type="number">
+  Platform fee percentage applied to the base rate
+</ResponseField>
+
+<ResponseField name="expires_at" type="string">
+  When this rate quote expires (ISO 8601 format)
+</ResponseField>
+
+## Rate Calculation Examples
+
+<AccordionGroup>
+  <Accordion title="Calculate Token Amount for Offramp">
+    When creating an offramp order, calculate how many tokens to approve:
+    
+    ```javascript
+    // Get current rate
+    const rateResponse = await fetch('/api/v1/rates?currency=usdc');
+    const { marked_up_rate } = await rateResponse.json();
+    
+    // Calculate tokens needed for 1000 KES
+    const fiatAmount = 1000;
+    const tokensNeeded = fiatAmount / marked_up_rate;
+    
+    console.log(`Need ${tokensNeeded} USDC for ${fiatAmount} KES`);
+    
+    // Approve tokens before creating order
+    const approveAmount = ethers.parseUnits(
+      tokensNeeded.toString(), 
+      6 // USDC decimals
+    );
+    ```
+  </Accordion>
+  
+  <Accordion title="Calculate Fiat Amount for Onramp">
+    For onramp orders, calculate how much crypto user will receive:
+    
+    ```javascript
+    // Get current rate
+    const rateResponse = await fetch('/api/v1/rates?currency=usdc');
+    const { marked_up_rate } = await rateResponse.json();
+    
+    // Calculate crypto for 1000 KES payment
+    const fiatAmount = 1000;
+    const cryptoAmount = fiatAmount / marked_up_rate;
+    
+    console.log(`${fiatAmount} KES = ${cryptoAmount} USDC`);
+    ```
+  </Accordion>
+  
+  <Accordion title="Multi-Currency Rate Comparison">
+    Compare rates across different tokens:
+    
+    ```javascript
+    const tokens = ['usdc', 'eth', 'wxm'];
+    const rates = {};
+    
+    for (const token of tokens) {
+      const response = await fetch(`/api/v1/rates?currency=${token}`);
+      const data = await response.json();
+      rates[token] = data.marked_up_rate;
+    }
+    
+    console.log('Current rates:', rates);
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Rate Validity
+
+<Warning>
+**Rate Expiration:** Rates are valid for 5 minutes. Always fetch fresh rates before creating orders.
+
+**Slippage Protection:** Rates may change between fetching and order creation. Consider adding slippage tolerance.
+</Warning>
+
+## Supported Token Pairs
+
+| Token | Networks | Fiat Currencies |
+|-------|----------|----------------|
+| USDC | Base, Arbitrum, Ethereum, Scroll | KES, UGX, TZS, NGN, GHS |
+| USDT | Lisk, Tron, BNB Chain, Polygon | KES, UGX, TZS, NGN, GHS |
+| ETH | Ethereum | KES, UGX, TZS, NGN, GHS |
+| WXM | Arbitrum | KES, UGX, TZS, NGN, GHS |
+| CUSD | Celo | KES, UGX, TZS, NGN, GHS |
+| CNGN | Celo | NGN |
+
+## Error Handling
+
+<ResponseExample>
+```json Error Response
+{
+  "status": "error",
+  "message": "Unsupported currency pair",
+  "code": "UNSUPPORTED_PAIR",
+  "details": {
+    "currency": "btc",
+    "fiat": "kes",
+    "supported_currencies": ["usdc", "eth", "wxm", "usdt_lisk"]
+  }
+}
 ```
-approve_amount = amount_fiat / marked_up_rate
-```
+</ResponseExample>
 
-This ensures the user has approved **enough tokens** before calling `/orders/create` with `order_type: 1`. 
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Order" icon="plus" href="create">
+    Use rates to create transactions
+  </Card>
+  <Card title="Track Order" icon="magnifying-glass" href="get">
+    Monitor order progress
+  </Card>
+</CardGroup>

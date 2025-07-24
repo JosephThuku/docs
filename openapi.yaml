@@ -1,0 +1,1155 @@
+openapi: 3.0.3
+info:
+  title: Paycrest Aggregator API
+  version: 1.0.0
+  description: |
+    OpenAPI schema for the Paycrest Aggregator API. This covers sender, provider, and general endpoints.
+tags:
+  - name: Sender
+    description: Endpoints for senders to create and manage payment orders
+  - name: Provider
+    description: Endpoints for providers to manage and fulfill orders
+  - name: General
+    description: General protocol and utility endpoints
+servers:
+  - url: https://api.paycrest.io/v1
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: API-Key
+  schemas:
+
+    # Sender Schemas
+    NewPaymentOrderPayload:
+      type: object
+      required:
+        - amount
+        - token
+        - rate
+        - network
+        - recipient
+      properties:
+        amount:
+          type: number
+        token:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        rate:
+          type: number
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+        recipient:
+          $ref: '#/components/schemas/PaymentOrderRecipient'
+        reference:
+          type: string
+        returnAddress:
+          type: string
+    PaymentOrderRecipient:
+      type: object
+      required:
+        - institution
+        - accountIdentifier
+        - accountName
+        - memo
+      properties:
+        institution:
+          type: string
+          description: Institution code (SWIFT code or custom PayCrest code ending with 'PC'). See [Code Standards](/resources/code-standards) for details.
+        accountIdentifier:
+          type: string
+          description: Bank account number, mobile number, or other account identifier
+        accountName:
+          type: string
+          description: Name of the account holder
+        memo:
+          type: string
+          description: Memo or reference for the transaction
+        providerId:
+          type: string
+          description: Optional provider ID for specific routing
+        metadata:
+          type: object
+          description: Additional metadata for the transaction
+        currency:
+          type: string
+          description: ISO 4217 currency code (e.g., NGN, KES, UGX). See [Supported Currencies](/resources/supported-currencies) for available options.
+    ReceiveAddressResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: string
+        token:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+        receiveAddress:
+          type: string
+        validUntil:
+          type: string
+          format: date-time
+        senderFee:
+          type: number
+        transactionFee:
+          type: number
+        reference:
+          type: string
+    PaymentOrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        amountPaid:
+          type: number
+        amountReturned:
+          type: number
+        token:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        senderFee:
+          type: number
+        transactionFee:
+          type: number
+        rate:
+          type: number
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+        gatewayId:
+          type: string
+        recipient:
+          $ref: '#/components/schemas/PaymentOrderRecipient'
+        fromAddress:
+          type: string
+        returnAddress:
+          type: string
+        receiveAddress:
+          type: string
+        feeAddress:
+          type: string
+        reference:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        txHash:
+          type: string
+        status:
+          type: string
+        transactionLogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionLog'
+    SenderPaymentOrderList:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentOrderResponse'
+    SenderStatsResponse:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalOrderVolume:
+          type: string
+        totalFeeEarnings:
+          type: string
+
+    # Provider Schemas
+    ProviderLockOrderList:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/LockPaymentOrderResponse'
+    LockPaymentOrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        gatewayId:
+          type: string
+        amount:
+          type: number
+        rate:
+          type: number
+        institution:
+          type: string
+          description: Institution code (SWIFT code or custom PayCrest code ending with 'PC'). See [Code Standards](/resources/code-standards) for details.
+        accountIdentifier:
+          type: string
+        accountName:
+          type: string
+        memo:
+          type: string
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+        status:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        transactionLogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionLog'
+        cancellationReasons:
+          type: array
+          items:
+            type: string
+    AcceptOrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        institution:
+          type: string
+          description: Institution code (SWIFT code or custom PayCrest code ending with 'PC'). See [Code Standards](/resources/code-standards) for details.
+        accountIdentifier:
+          type: string
+        accountName:
+          type: string
+        memo:
+          type: string
+        metadata:
+          type: object
+    FulfillLockOrderPayload:
+      type: object
+      required:
+        - psp
+        - txId
+      properties:
+        psp:
+          type: string
+        txId:
+          type: string
+        validationStatus:
+          type: string
+        validationError:
+          type: string
+    CancelLockOrderPayload:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+    MarketRateResponse:
+      type: object
+      properties:
+        marketRate:
+          type: number
+        minimumRate:
+          type: number
+        maximumRate:
+          type: number
+    ProviderStatsResponse:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalFiatVolume:
+          type: number
+        totalCryptoVolume:
+          type: number
+
+    # General Schemas
+    SupportedCurrencies:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ISO 4217 currency code (e.g., NGN, KES, UGX). See [Supported Currencies](/resources/supported-currencies) for available options.
+        name:
+          type: string
+        shortName:
+          type: string
+        decimals:
+          type: integer
+        symbol:
+          type: string
+        marketRate:
+          type: number
+    SupportedInstitutions:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+          description: Institution code (SWIFT code or custom PayCrest code ending with 'PC'). See [Code Standards](/resources/code-standards) for details.
+        type:
+          type: string
+    SupportedTokenResponse:
+      type: object
+      properties:
+        symbol:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        contractAddress:
+          type: string
+        decimals:
+          type: integer
+        baseCurrency:
+          type: string
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+
+    # Order Status Schemas
+    LockPaymentOrderStatusResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        amount:
+          type: number
+        token:
+          type: string
+          description: Token symbol (USDT, USDC, CUSD, CNGN). See [Supported Stablecoins](/resources/supported-stablecoins) for available options.
+        network:
+          type: string
+          enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+          description: Network identifier for the blockchain
+        settlePercent:
+          type: number
+        status:
+          type: string
+        txHash:
+          type: string
+        settlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/LockPaymentOrderSplitOrder'
+        txReceipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/LockPaymentOrderTxReceipt'
+        updatedAt:
+          type: string
+          format: date-time
+    LockPaymentOrderSplitOrder:
+      type: object
+      properties:
+        splitOrderId:
+          type: string
+        amount:
+          type: number
+        rate:
+          type: number
+        orderPercent:
+          type: number
+    LockPaymentOrderTxReceipt:
+      type: object
+      properties:
+        status:
+          type: string
+        txHash:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    # Common Schemas
+    TransactionLog:
+      type: object
+      properties:
+        id:
+          type: string
+        gateway_id:
+          type: string
+        status:
+          type: string
+        tx_hash:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # System Schemas
+    VerifyAccountRequest:
+      type: object
+      required:
+        - institution
+        - accountIdentifier
+      properties:
+        institution:
+          type: string
+          description: Institution code (SWIFT code or custom PayCrest code ending with 'PC'). See [Code Standards](/resources/code-standards) for details.
+        accountIdentifier:
+          type: string
+          description: Bank account number, mobile number, or other account identifier
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Error message
+        data:
+          type: object
+          nullable: true
+    StandardResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Operation successful
+        data:
+          type: object
+          description: The actual response data (e.g., ReceiveAddressResponse, etc.)
+
+
+
+paths:
+
+  # Sender Endpoints
+  /sender/orders:
+    post:
+      tags:
+        - Sender
+      summary: Initiate payment order
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPaymentOrderPayload'
+      responses:
+        '201':
+          description: Payment order initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ReceiveAddressResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Sender
+      summary: List payment orders
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: token
+          schema:
+            type: string
+        - in: query
+          name: network
+          schema:
+            type: string
+            enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+            description: Network identifier for the blockchain
+        - in: query
+          name: ordering
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of payment orders
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SenderPaymentOrderList'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /sender/orders/{id}:
+    get:
+      tags:
+        - Sender
+      summary: Get payment order by ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment order
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaymentOrderResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /sender/stats:
+    get:
+      tags:
+        - Sender
+      summary: Get sender stats
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Sender stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SenderStatsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders/{chain_id}/{id}:
+    get:
+      tags:
+        - Sender
+      summary: Get lock payment order status
+      parameters:
+        - in: path
+          name: chain_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LockPaymentOrderStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Provider Endpoints
+  /provider/orders:
+    get:
+      tags:
+        - Provider
+      summary: List lock payment orders
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: currency
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: ordering
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of lock payment orders
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProviderLockOrderList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /provider/rates/{token}/{fiat}:
+    get:
+      tags:
+        - Provider
+      summary: Get market rate
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: fiat
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Market rate
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MarketRateResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /provider/stats:
+    get:
+      tags:
+        - Provider
+      summary: Get provider stats
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: currency
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProviderStatsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /provider/node-info:
+    get:
+      tags:
+        - Provider
+      summary: Get node info
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Node info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+
+  # General Endpoints
+  /currencies:
+    get:
+      tags:
+        - General
+      summary: List supported fiat currencies
+      responses:
+        '200':
+          description: List of currencies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupportedCurrencies'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /institutions/{currency_code}:
+    get:
+      tags:
+        - General
+      summary: List supported institutions for a currency
+      parameters:
+        - in: path
+          name: currency_code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of institutions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupportedInstitutions'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tokens:
+    get:
+      tags:
+        - General
+      summary: List supported tokens
+      parameters:
+        - in: query
+          name: network
+          schema:
+            type: string
+            enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+            description: Network identifier for the blockchain
+      responses:
+        '200':
+          description: List of tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupportedTokenResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rates/{token}/{amount}/{fiat}:
+    get:
+      tags:
+        - General
+      summary: Get token rate
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: amount
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: fiat
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: network
+          schema:
+            type: string
+            enum: [base, bnb-smart-chain, lisk, tron, celo, arbitrum-one, polygon, asset-chain]
+            description: Network identifier for the blockchain (optional, filters tokens by network)
+        - in: query
+          name: provider_id
+          schema:
+            type: string
+            description: Provider ID to get the rate for a specific provider. If not provided, returns rate from the public queue.
+      responses:
+        '200':
+          description: Token rate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: number
+                    description: The exchange rate for the token to fiat currency conversion
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /pubkey:
+    get:
+      tags:
+        - General
+      summary: Get aggregator public key
+      responses:
+        '200':
+          description: Public key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /verify-account:
+    post:
+      tags:
+        - General
+      summary: Verify account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyAccountRequest'
+      responses:
+        '200':
+          description: Account verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Operation successful
+                  data:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /reindex/{network}/{tx_hash}:
+    get:
+      tags:
+        - General
+      summary: Reindex transaction
+      parameters:
+        - in: path
+          name: network
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: tx_hash
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction reindexed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          events:
+                            type: object
+                            properties:
+                              Transfer:
+                                type: integer
+                              OrderCreated:
+                                type: integer
+                              OrderSettled:
+                                type: integer
+                              OrderRefunded:
+                                type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 

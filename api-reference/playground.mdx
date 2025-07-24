@@ -1,0 +1,392 @@
+---
+title: API Playground
+description: Test Element Pay API endpoints interactively
+---
+
+# API Playground
+
+Test Element Pay API endpoints directly from your browser. Perfect for exploring the API, testing integrations, and understanding response formats.
+
+<Warning>
+**Sandbox Environment:** This playground uses the staging API. No real money will be transferred.
+
+**API Key Required:** You'll need a valid API key to test endpoints.
+</Warning>
+
+## Quick Setup
+
+<Steps>
+  <Step title="Get API Key">
+    Contact [elementpay.info@gmail.com](mailto:elementpay.info@gmail.com) for a staging API key
+  </Step>
+  <Step title="Set Base URL">
+    Use `https://staging.elementpay.net/api/v1` for testing
+  </Step>
+  <Step title="Test Endpoints">
+    Start with the rates endpoint, then try creating orders
+  </Step>
+</Steps>
+
+## Interactive Testing
+
+### 1. Get Exchange Rates
+
+<CodeGroup>
+```bash Test Rates Endpoint
+curl -X GET "https://staging.elementpay.net/api/v1/rates?currency=usdc" \
+  -H "x-api-key: YOUR_STAGING_API_KEY"
+```
+
+```javascript JavaScript Test
+// Test the rates endpoint
+async function testRates() {
+  const response = await fetch(
+    'https://staging.elementpay.net/api/v1/rates?currency=usdc',
+    {
+      headers: {
+        'x-api-key': 'YOUR_STAGING_API_KEY'
+      }
+    }
+  );
+  
+  const data = await response.json();
+  console.log('Current USDC rate:', data);
+  return data;
+}
+
+// Run the test
+testRates();
+```
+</CodeGroup>
+
+### 2. Create Test Order
+
+<CodeGroup>
+```bash Test Create Order
+curl -X POST "https://staging.elementpay.net/api/v1/orders/create" \
+  -H "x-api-key: YOUR_STAGING_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount_fiat": 100,
+    "currency": "KES",
+    "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "order_type": 0,
+    "wallet_address": "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
+    "phone_number": "254700000001",
+    "webhook_url": "https://webhook.site/your-unique-url"
+  }'
+```
+
+```javascript JavaScript Test
+// Test creating an onramp order
+async function testCreateOrder() {
+  const orderData = {
+    amount_fiat: 100,
+    currency: 'KES',
+    token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    order_type: 0, // Onramp
+    wallet_address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4',
+    phone_number: '254700000001', // Test number
+    webhook_url: 'https://webhook.site/your-unique-url'
+  };
+  
+  const response = await fetch(
+    'https://staging.elementpay.net/api/v1/orders/create',
+    {
+      method: 'POST',
+      headers: {
+        'x-api-key': 'YOUR_STAGING_API_KEY',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(orderData)
+    }
+  );
+  
+  const result = await response.json();
+  console.log('Order created:', result);
+  return result;
+}
+
+// Run the test
+testCreateOrder();
+```
+</CodeGroup>
+
+### 3. Check Order Status
+
+<CodeGroup>
+```bash Test Order Status
+# Replace with actual transaction hash from create order response
+curl -X GET "https://staging.elementpay.net/api/v1/orders/tx/0xYOUR_TX_HASH" \
+  -H "x-api-key: YOUR_STAGING_API_KEY"
+```
+
+```javascript JavaScript Test
+// Test checking order status
+async function testOrderStatus(txHash) {
+  const response = await fetch(
+    `https://staging.elementpay.net/api/v1/orders/tx/${txHash}`,
+    {
+      headers: {
+        'x-api-key': 'YOUR_STAGING_API_KEY'
+      }
+    }
+  );
+  
+  const data = await response.json();
+  console.log('Order status:', data);
+  return data;
+}
+
+// Use transaction hash from created order
+// testOrderStatus('0xYOUR_TX_HASH');
+```
+</CodeGroup>
+
+## Testing Tools & Resources
+
+<CardGroup cols={2}>
+  <Card title="Webhook.site" icon="webhook" href="https://webhook.site">
+    Generate temporary webhook URLs for testing
+  </Card>
+  <Card title="Postman Collection" icon="download" href="#postman-collection">
+    Download our Postman collection
+  </Card>
+  <Card title="Insomnia Workspace" icon="moon" href="#insomnia-workspace">
+    Import our Insomnia workspace
+  </Card>
+  <Card title="OpenAPI Spec" icon="file-code" href="/openapi.yaml">
+    Download OpenAPI specification
+  </Card>
+</CardGroup>
+
+## Postman Collection
+
+Import this collection to test all endpoints in Postman:
+
+<CodeGroup>
+```json Postman Collection
+{
+  "info": {
+    "name": "Element Pay API",
+    "description": "Complete Element Pay API collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://staging.elementpay.net/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_API_KEY_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get Exchange Rates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/rates?currency=usdc",
+          "host": ["{{baseUrl}}"],
+          "path": ["rates"],
+          "query": [
+            {
+              "key": "currency",
+              "value": "usdc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Onramp Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apiKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount_fiat\": 100,\n  \"currency\": \"KES\",\n  \"token\": \"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\n  \"order_type\": 0,\n  \"wallet_address\": \"0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4\",\n  \"phone_number\": \"254700000001\",\n  \"webhook_url\": \"https://webhook.site/your-unique-url\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/orders/create",
+          "host": ["{{baseUrl}}"],
+          "path": ["orders", "create"]
+        }
+      }
+    },
+    {
+      "name": "Check Order Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/orders/tx/{{transactionHash}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["orders", "tx", "{{transactionHash}}"]
+        }
+      }
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Test Data
+
+Use these test values for sandbox testing:
+
+<AccordionGroup>
+  <Accordion title="Test Phone Numbers">
+    **Valid Test Numbers (Sandbox):**
+    - `254700000001` - `254700000999`
+    - These numbers simulate successful payments
+    
+    **Failed Payment Test:**
+    - `254700001000` - Simulates payment failure
+  </Accordion>
+  
+  <Accordion title="Test Wallet Addresses">
+    **Valid Test Addresses:**
+    - `0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4`
+    - `0x8ba1f109551bD432803012645Hac136c4c0532925a3b8D4`
+    - Any valid Ethereum address format
+  </Accordion>
+  
+  <Accordion title="Test Token Addresses">
+    **Staging Token Addresses:**
+    - **Base USDC:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+    - **Arbitrum USDC:** `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
+    - **Lisk USDT:** `0x05D032ac25d322df992303dCa074EE7392C117b9`
+  </Accordion>
+</AccordionGroup>
+
+## Common Test Scenarios
+
+### Successful Onramp Flow
+
+<Steps>
+  <Step title="Get Current Rate">
+    ```bash
+    curl -X GET "https://staging.elementpay.net/api/v1/rates?currency=usdc" \
+      -H "x-api-key: YOUR_API_KEY"
+    ```
+  </Step>
+  
+  <Step title="Create Onramp Order">
+    ```bash
+    curl -X POST "https://staging.elementpay.net/api/v1/orders/create" \
+      -H "x-api-key: YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "amount_fiat": 100,
+        "currency": "KES",
+        "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "order_type": 0,
+        "wallet_address": "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
+        "phone_number": "254700000001",
+        "webhook_url": "https://webhook.site/your-unique-url"
+      }'
+    ```
+  </Step>
+  
+  <Step title="Monitor Order Status">
+    ```bash
+    curl -X GET "https://staging.elementpay.net/api/v1/orders/tx/TX_HASH_FROM_STEP_2" \
+      -H "x-api-key: YOUR_API_KEY"
+    ```
+  </Step>
+</Steps>
+
+### Test Webhook Integration
+
+<Steps>
+  <Step title="Set up Webhook Receiver">
+    Go to [webhook.site](https://webhook.site) and copy your unique URL
+  </Step>
+  
+  <Step title="Create Order with Webhook">
+    Include your webhook.site URL in the `webhook_url` field
+  </Step>
+  
+  <Step title="Monitor Webhooks">
+    Watch webhook.site for real-time status updates
+  </Step>
+</Steps>
+
+## Error Testing
+
+Test error scenarios to ensure proper error handling:
+
+<CodeGroup>
+```bash Invalid API Key
+curl -X GET "https://staging.elementpay.net/api/v1/rates" \
+  -H "x-api-key: invalid_key"
+
+# Expected: 401 Unauthorized
+```
+
+```bash Invalid Token Address
+curl -X POST "https://staging.elementpay.net/api/v1/orders/create" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount_fiat": 100,
+    "currency": "KES",
+    "token": "0xinvalid_address",
+    "order_type": 0,
+    "wallet_address": "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
+    "phone_number": "254700000001"
+  }'
+
+# Expected: 400 Bad Request with error details
+```
+
+```bash Missing Required Fields
+curl -X POST "https://staging.elementpay.net/api/v1/orders/create" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount_fiat": 100
+  }'
+
+# Expected: 422 Validation Error
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="API Reference" icon="book" href="introduction">
+    Complete API documentation
+  </Card>
+  <Card title="Get API Key" icon="key" href="mailto:elementpay.info@gmail.com">
+    Request staging access
+  </Card>
+  <Card title="Integration Guide" icon="rocket" href="../quickstart">
+    Start building your app
+  </Card>
+</CardGroup>
